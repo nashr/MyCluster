@@ -1,5 +1,6 @@
 MyCluster
 =========
+IF4071 Pembelajaran Mesin
 
 This repo provides 2 algorithms implementation for clustering:  
 (1) agglomerative single link for hierarchical clustering and  
