@@ -3,16 +3,37 @@ import java.util.ArrayList;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.NoSupportForMissingValuesException;
 
 public class HierarchicalCluster extends Classifier {
 
-  private ArrayList<ArrayList<Integer>> cluster;
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 1L;
+  private ArrayList<Tree<Integer>> cluster;
   private ArrayList<ArrayList<Double>> m_proximity;
 
   public HierarchicalCluster() {
-    cluster = new ArrayList<>();
-    m_proximity = new ArrayList<>();
+    cluster = new ArrayList<Tree<Integer>>();
+    m_proximity = new ArrayList<ArrayList<Double>>();
 
+  }
+
+  private void initCluster(Instances data) {
+    for (int i = 0; i < data.numInstances(); i++) {
+      cluster.add(new Tree<Integer>(i));
+    }
+
+  }
+
+  private void printCluster() {
+    for (int i = 0; i < cluster.size(); i++) {
+      System.out.println("Cluster ke-" + i);
+      System.out.println("---");
+      System.out.println(cluster.get(i).toString(""));
+      System.out.println("===");
+    }
   }
 
   private double calcDistance(Instance data0, Instance data1) {
@@ -30,13 +51,11 @@ public class HierarchicalCluster extends Classifier {
 
   private void initProximityMatrix(Instances data) {
     for (int i = 0; i < data.numInstances(); i++) {
-      cluster.add(new ArrayList<Integer>());
       m_proximity.add(new ArrayList<Double>());
     }
 
     for (int i = 0; i < m_proximity.size(); i++) {
       for (int j = 0; j < i + 1; j++) {
-        cluster.get(i).add(i);
         if (i == j) {
           m_proximity.get(i).add(9999.0d);
         } else { // j < i
@@ -47,8 +66,59 @@ public class HierarchicalCluster extends Classifier {
 
   }
 
-  private void updateProximityMatrix() {
-    // TODO
+  private void updateProximityMatrix(int[] pair) {
+    m_proximity.add(new ArrayList<Double>());
+    for (int i = 0; i < m_proximity.size(); i++) {
+      if (i == m_proximity.size() - 1) {
+        m_proximity.get(m_proximity.size() - 1).add(9999.0d);
+      } else {
+        double d0, d1;
+
+        if (i < pair[0]) {
+          d0 = m_proximity.get(pair[0]).get(i);
+        } else {
+          d0 = m_proximity.get(i).get(pair[0]);
+        }
+
+        if (i < pair[1]) {
+          d1 = m_proximity.get(pair[1]).get(i);
+        } else {
+          d1 = m_proximity.get(i).get(pair[1]);
+        }
+
+        if (d0 < d1) {
+          m_proximity.get(m_proximity.size() - 1).add(d0);
+        } else {
+          m_proximity.get(m_proximity.size() - 1).add(d1);
+        }
+      }
+    }
+
+    m_proximity.remove(pair[0]);
+    if (pair[0] < pair[1]) {
+      m_proximity.remove(pair[1] - 1);
+    } else {
+      m_proximity.remove(pair[1]);
+    }
+
+    for (int i = 0; i < m_proximity.size(); i++) {
+      if (pair[0] < m_proximity.get(i).size()) {
+        m_proximity.get(i).remove(pair[0]);
+        if (pair[0] < pair[1]) {
+          if (pair[1] - 1 < m_proximity.get(i).size() - 1) {
+            m_proximity.get(i).remove(pair[1] - 1);
+          }
+        } else {
+          if (pair[1] < m_proximity.get(i).size() - 1) {
+            m_proximity.get(i).remove(pair[1]);
+          }
+        }
+      } else {
+        if (pair[1] < m_proximity.get(i).size()) {
+          m_proximity.get(i).remove(pair[1]);
+        }
+      }
+    }
 
   }
 
@@ -74,7 +144,7 @@ public class HierarchicalCluster extends Classifier {
       int j = getLeastIndex(idx, idx0, (idx0 + idx1) / 2);
       int k = getLeastIndex(idx, (idx0 + idx1) / 2 + 1, idx1);
 
-      if (m_proximity.get(idx).get(j) < m_proximity.get(idx).get(k)) {
+      if (m_proximity.get(idx).get(j) <= m_proximity.get(idx).get(k)) {
         i = j;
       } else {
         i = k;
@@ -95,7 +165,7 @@ public class HierarchicalCluster extends Classifier {
       int[] t0 = getClosestPair(idx0, (idx0 + idx1) / 2);
       int[] t1 = getClosestPair((idx0 + idx1) / 2 + 1, idx1);
 
-      if (m_proximity.get(t0[0]).get(t0[1]) < m_proximity.get(t1[0]).get(t1[1])) {
+      if (m_proximity.get(t0[0]).get(t0[1]) <= m_proximity.get(t1[0]).get(t1[1])) {
         retval[0] = t0[0];
         retval[1] = t0[1];
       } else {
@@ -108,21 +178,30 @@ public class HierarchicalCluster extends Classifier {
 
   }
 
-  private void makeCluster() {
-    int[] pair = getClosestPair(0, m_proximity.size() - 1);
+  private void makeCluster(int pair[]) {
+    Tree<Integer> t = new Tree<Integer>();
+    t.addLeftChild(cluster.remove(pair[0]));
+    t.addRightChild(cluster.remove(pair[1]));
+    t.setRootFromChildren();
 
-    cluster.get(pair[0]).add(pair[1]);
-    cluster.remove(pair[1]);
+    cluster.add(t);
   }
 
   @Override
   public void buildClassifier(Instances data) throws Exception {
+    initCluster(data);
     initProximityMatrix(data);
 
-    // printProximityMatrix();
+    while (cluster.size() > 1) {
+      int[] pair = getClosestPair(0, m_proximity.size() - 1);
+      makeCluster(pair);
+      updateProximityMatrix(pair);
+    }
 
-    makeCluster();
-
+    printCluster();
   }
 
+  public double classifyInstance(Instance instance) throws NoSupportForMissingValuesException {
+    return 0;
+  }
 }
