@@ -10,15 +10,27 @@ public class HierarchicalCluster extends AbstractClusterer {
    * 
    */
   private static final long serialVersionUID = 1L;
+
+  public enum Mode {
+    SINGLE, COMPLETE
+  };
+
   private ArrayList<Instance> dataset;
   private ArrayList<Tree<Integer>> cluster;
   private ArrayList<ArrayList<Double>> m_proximity;
+  private Mode mode = Mode.SINGLE;
+
+  private static double bound = 9999.0d;
 
   public HierarchicalCluster() {
     dataset = new ArrayList<Instance>();
     cluster = new ArrayList<Tree<Integer>>();
     m_proximity = new ArrayList<ArrayList<Double>>();
 
+  }
+
+  public void setMode(Mode mode) {
+    this.mode = mode;
   }
 
   private void initCluster(Instances data) {
@@ -41,7 +53,7 @@ public class HierarchicalCluster extends AbstractClusterer {
   private double calcDistance(Instance data0, Instance data1) {
     double d = 0;
 
-    for (int i = 0; i < data0.numAttributes(); i++) {
+    for (int i = 0; i < data0.numAttributes() - 1; i++) {
       if (data0.value(data0.attribute(i)) != data1.value(data1.attribute(i))) {
         d += 1;
       }
@@ -59,7 +71,7 @@ public class HierarchicalCluster extends AbstractClusterer {
     for (int i = 0; i < m_proximity.size(); i++) {
       for (int j = 0; j < i + 1; j++) {
         if (i == j) {
-          m_proximity.get(i).add(9999.0d);
+          m_proximity.get(i).add(bound);
         } else { // j < i
           m_proximity.get(i).add(calcDistance(data.instance(i), data.instance(j)));
         }
@@ -72,7 +84,7 @@ public class HierarchicalCluster extends AbstractClusterer {
     m_proximity.add(new ArrayList<Double>());
     for (int i = 0; i < m_proximity.size(); i++) {
       if (i == m_proximity.size() - 1) {
-        m_proximity.get(m_proximity.size() - 1).add(9999.0d);
+        m_proximity.get(m_proximity.size() - 1).add(bound);
       } else {
         double d0, d1;
 
@@ -88,11 +100,20 @@ public class HierarchicalCluster extends AbstractClusterer {
           d1 = m_proximity.get(i).get(pair[1]);
         }
 
-        if (d0 < d1) {
-          m_proximity.get(m_proximity.size() - 1).add(d0);
-        } else {
-          m_proximity.get(m_proximity.size() - 1).add(d1);
+        if (mode == Mode.SINGLE) {
+          if (d0 < d1) {
+            m_proximity.get(m_proximity.size() - 1).add(d0);
+          } else {
+            m_proximity.get(m_proximity.size() - 1).add(d1);
+          }
+        } else if (mode == Mode.COMPLETE) {
+          if (d0 > d1) {
+            m_proximity.get(m_proximity.size() - 1).add(d0);
+          } else {
+            m_proximity.get(m_proximity.size() - 1).add(d1);
+          }
         }
+
       }
     }
 
@@ -206,7 +227,7 @@ public class HierarchicalCluster extends AbstractClusterer {
 
   public int clusterInstance(Instance instance) throws Exception {
     int idx = -1;
-    double dis = 9999.0d;
+    double dis = bound;
     for (int i = 0; i < dataset.size(); i++) {
       double d = calcDistance(instance, dataset.get(i));
       if (d < dis) {

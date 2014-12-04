@@ -13,6 +13,7 @@ public class Main {
     }
 
     HierarchicalCluster HC = new HierarchicalCluster();
+    HC.setMode(HierarchicalCluster.Mode.COMPLETE);
     long begin = System.currentTimeMillis();
     HC.buildClusterer(data);
     long end = System.currentTimeMillis();
