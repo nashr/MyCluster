@@ -1,3 +1,4 @@
+import weka.clusterers.ClusterEvaluation;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
@@ -13,10 +14,15 @@ public class Main {
 
     HierarchicalCluster HC = new HierarchicalCluster();
     long begin = System.currentTimeMillis();
-    HC.buildClassifier(data);
+    HC.buildClusterer(data);
     long end = System.currentTimeMillis();
 
-    System.out.println(HC.toString());
+    ClusterEvaluation eval = new ClusterEvaluation();
+    eval.setClusterer(HC);
+    eval.evaluateClusterer(data);
+
+    System.out.println(eval.clusterResultsToString());
+
     System.out.println("Classifier built in " + (end - begin) + " milliseconds.");
   }
 }

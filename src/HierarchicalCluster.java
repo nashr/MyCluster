@@ -1,20 +1,21 @@
 import java.util.ArrayList;
 
-import weka.classifiers.Classifier;
+import weka.clusterers.AbstractClusterer;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.NoSupportForMissingValuesException;
 
-public class HierarchicalCluster extends Classifier {
+public class HierarchicalCluster extends AbstractClusterer {
 
   /**
    * 
    */
   private static final long serialVersionUID = 1L;
+  private ArrayList<Instance> dataset;
   private ArrayList<Tree<Integer>> cluster;
   private ArrayList<ArrayList<Double>> m_proximity;
 
   public HierarchicalCluster() {
+    dataset = new ArrayList<Instance>();
     cluster = new ArrayList<Tree<Integer>>();
     m_proximity = new ArrayList<ArrayList<Double>>();
 
@@ -22,6 +23,7 @@ public class HierarchicalCluster extends Classifier {
 
   private void initCluster(Instances data) {
     for (int i = 0; i < data.numInstances(); i++) {
+      dataset.add(data.instance(i));
       cluster.add(new Tree<Integer>(i));
     }
 
@@ -188,7 +190,7 @@ public class HierarchicalCluster extends Classifier {
   }
 
   @Override
-  public void buildClassifier(Instances data) throws Exception {
+  public void buildClusterer(Instances data) throws Exception {
     initCluster(data);
     initProximityMatrix(data);
 
@@ -199,9 +201,30 @@ public class HierarchicalCluster extends Classifier {
     }
 
     printCluster();
+
   }
 
-  public double classifyInstance(Instance instance) throws NoSupportForMissingValuesException {
-    return 0;
+  public int clusterInstance(Instance instance) throws Exception {
+    int idx = -1;
+    double dis = 9999.0d;
+    for (int i = 0; i < dataset.size(); i++) {
+      double d = calcDistance(instance, dataset.get(i));
+      if (d < dis) {
+        idx = i;
+        dis = d;
+      }
+    }
+
+    if (cluster.get(0).getLeftChild().getRoot().contains(idx)) {
+      return 0;
+    } else {
+      return 1;
+    }
+
+  }
+
+  @Override
+  public int numberOfClusters() throws Exception {
+    return 2;
   }
 }

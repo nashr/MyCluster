@@ -24,6 +24,14 @@ public class Tree<T> {
     return root;
   }
 
+  public Tree<T> getLeftChild() {
+    return child_left;
+  }
+
+  public Tree<T> getRightChild() {
+    return child_right;
+  }
+
   public void addLeftChild(Tree<T> t) {
     child_left = t;
   }
