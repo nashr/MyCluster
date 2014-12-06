@@ -23,6 +23,8 @@ public class PartitionalCluster extends AbstractClusterer {
   private ArrayList<ArrayList<Double>> centroids;
   private Instances dataset;
 
+  private static double bound = 9999.0d;
+
   public PartitionalCluster() {
     init_method = INIT_METHOD.FORGY;
     n_cluster = 2;
@@ -38,9 +40,16 @@ public class PartitionalCluster extends AbstractClusterer {
     init_method = method;
   }
 
-  private double calcDistance(Instance data0, Instance data1) {
+  private double calcDistance(ArrayList<Double> centroid, Instance data) {
+    double d = 0;
 
-    return 0;
+    for (int i = 0; i < dataset.numAttributes() - 1; i++) {
+      if (data.value(dataset.attribute(i)) != centroid.get(i)) {
+        d += 1;
+      }
+    }
+
+    return d;
   }
 
   private void initCentroid() {
@@ -66,18 +75,29 @@ public class PartitionalCluster extends AbstractClusterer {
     }
   }
 
-  private void makeCluster() {
-    for (int i = 0; i < dataset.numInstances(); i++) {
-      int cluster = 0;
-      for (int j = 0; j < n_cluster; j++) {
+  private void updateCentroid() {
 
-      }
-    }
   }
 
   private void initCluster() {
     for (int i = 0; i < n_cluster; i++) {
       clusters.add(new ArrayList<Instance>());
+    }
+  }
+
+  private void makeCluster() {
+    for (int i = 0; i < dataset.numInstances(); i++) {
+      int cluster = -1;
+      double dist = bound;
+      for (int j = 0; j < n_cluster; j++) {
+        double d = calcDistance(centroids.get(j), dataset.instance(i));
+        if (d < dist) {
+          cluster = j;
+          dist = d;
+        }
+      }
+
+      clusters.get(cluster).add(dataset.instance(i));
     }
   }
 

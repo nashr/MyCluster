@@ -6,14 +6,14 @@ public class Tree<T> {
   private Tree<T> child_right;
 
   public Tree() {
-    root = new ArrayList();
+    root = new ArrayList<T>();
     child_left = null;
     child_right = null;
 
   }
 
   public Tree(T e) {
-    root = new ArrayList();
+    root = new ArrayList<T>();
     root.add(e);
     child_left = null;
     child_right = null;
