@@ -22,6 +22,7 @@ public class PartitionalCluster extends AbstractClusterer {
   private int n_cluster;
   private int f_converge;
   private ArrayList<ArrayList<Instance>> clusters;
+  private ArrayList<ArrayList<Integer>> ID_clusters;
   private ArrayList<ArrayList<Double>> centroids;
   private Instances dataset;
 
@@ -32,6 +33,7 @@ public class PartitionalCluster extends AbstractClusterer {
     n_cluster = 2;
     f_converge = 9999;
     clusters = new ArrayList<ArrayList<Instance>>();
+    ID_clusters = new ArrayList<ArrayList<Integer>>();
     centroids = new ArrayList<ArrayList<Double>>();
   }
 
@@ -81,7 +83,11 @@ public class PartitionalCluster extends AbstractClusterer {
   private void updateCentroid() {
     for (int i = 0; i < n_cluster; i++) {
       for (int j = 0; j < dataset.numAttributes() - 1; j++) {
-        ArrayList<Integer> t = new ArrayList<Integer>(dataset.attribute(j).numValues());
+        ArrayList<Integer> t = new ArrayList<Integer>();
+        for (int k = 0; k < dataset.attribute(j).numValues(); k++) {
+          t.add(0);
+        }
+
         for (int k = 0; k < clusters.get(i).size(); k++) {
           int idx = (int) clusters.get(i).get(k).value(dataset.attribute(j));
           t.set(idx, t.get(idx) + 1);
@@ -99,10 +105,20 @@ public class PartitionalCluster extends AbstractClusterer {
   private void initCluster() {
     for (int i = 0; i < n_cluster; i++) {
       clusters.add(new ArrayList<Instance>());
+      ID_clusters.add(new ArrayList<Integer>());
+    }
+  }
+
+  private void resetCluster() {
+    for (int i = 0; i < n_cluster; i++) {
+      clusters.get(i).clear();
+      ID_clusters.get(i).clear();
     }
   }
 
   private void makeCluster() {
+    resetCluster();
+
     for (int i = 0; i < dataset.numInstances(); i++) {
       int cluster = -1;
       double dist = bound;
@@ -115,6 +131,7 @@ public class PartitionalCluster extends AbstractClusterer {
       }
 
       clusters.get(cluster).add(dataset.instance(i));
+      ID_clusters.get(cluster).add(i);
     }
   }
 
@@ -124,9 +141,12 @@ public class PartitionalCluster extends AbstractClusterer {
     initCentroid();
     initCluster();
     while (f_converge > 0) {
+      f_converge = 0;
       makeCluster();
       updateCentroid();
     }
+
+    printCluster();
   }
 
   @Override
@@ -134,4 +154,17 @@ public class PartitionalCluster extends AbstractClusterer {
     return n_cluster;
   }
 
+  private void printCluster() {
+    for (int i = 0; i < n_cluster; i++) {
+      System.out.println("Cluster ke-" + i);
+      for (int j = 0; j < ID_clusters.get(i).size(); j++) {
+        System.out.print(ID_clusters.get(i).get(j));
+        if (j < ID_clusters.get(i).size() - 1) {
+          System.out.print(",");
+        } else {
+          System.out.println();
+        }
+      }
+    }
+  }
 }
