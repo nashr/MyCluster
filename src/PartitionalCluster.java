@@ -20,6 +20,7 @@ public class PartitionalCluster extends AbstractClusterer {
   private INIT_METHOD init_method;
 
   private int n_cluster;
+  private int f_converge;
   private ArrayList<ArrayList<Instance>> clusters;
   private ArrayList<ArrayList<Double>> centroids;
   private Instances dataset;
@@ -29,6 +30,7 @@ public class PartitionalCluster extends AbstractClusterer {
   public PartitionalCluster() {
     init_method = INIT_METHOD.FORGY;
     n_cluster = 2;
+    f_converge = 9999;
     clusters = new ArrayList<ArrayList<Instance>>();
     centroids = new ArrayList<ArrayList<Double>>();
   }
@@ -85,7 +87,11 @@ public class PartitionalCluster extends AbstractClusterer {
           t.set(idx, t.get(idx) + 1);
         }
 
-        centroids.get(i).set(j, (double) t.indexOf(Collections.max(t)));
+        double newval = (double) t.indexOf(Collections.max(t));
+        if (newval != centroids.get(i).get(j)) {
+          f_converge += 1;
+          centroids.get(i).set(j, newval);
+        }
       }
     }
   }
@@ -117,8 +123,10 @@ public class PartitionalCluster extends AbstractClusterer {
     dataset = data;
     initCentroid();
     initCluster();
-    makeCluster();
-    updateCentroid();
+    while (f_converge > 0) {
+      makeCluster();
+      updateCentroid();
+    }
   }
 
   @Override
