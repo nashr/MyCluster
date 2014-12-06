@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 import weka.clusterers.AbstractClusterer;
@@ -66,7 +67,7 @@ public class PartitionalCluster extends AbstractClusterer {
 
       for (int i = 0; i < n_cluster; i++) {
         centroids.add(new ArrayList<Double>());
-        for (int j = 0; j < dataset.numAttributes(); j++) {
+        for (int j = 0; j < dataset.numAttributes() - 1; j++) {
           centroids.get(i).add(dataset.instance(c.get(i)).value(dataset.attribute(j)));
         }
       }
@@ -76,7 +77,17 @@ public class PartitionalCluster extends AbstractClusterer {
   }
 
   private void updateCentroid() {
+    for (int i = 0; i < n_cluster; i++) {
+      for (int j = 0; j < dataset.numAttributes() - 1; j++) {
+        ArrayList<Integer> t = new ArrayList<Integer>(dataset.attribute(j).numValues());
+        for (int k = 0; k < clusters.get(i).size(); k++) {
+          int idx = (int) clusters.get(i).get(k).value(dataset.attribute(j));
+          t.set(idx, t.get(idx) + 1);
+        }
 
+        centroids.get(i).set(j, (double) t.indexOf(Collections.max(t)));
+      }
+    }
   }
 
   private void initCluster() {
@@ -107,6 +118,7 @@ public class PartitionalCluster extends AbstractClusterer {
     initCentroid();
     initCluster();
     makeCluster();
+    updateCentroid();
   }
 
   @Override
