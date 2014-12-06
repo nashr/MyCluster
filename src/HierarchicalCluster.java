@@ -145,6 +145,7 @@ public class HierarchicalCluster extends AbstractClusterer {
 
   }
 
+  @SuppressWarnings("unused")
   private void printProximityMatrix() {
     for (int i = 0; i < m_proximity.size(); i++) {
       for (int j = 0; j < m_proximity.get(i).size(); j++) {
