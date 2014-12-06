@@ -149,6 +149,20 @@ public class PartitionalCluster extends AbstractClusterer {
     printCluster();
   }
 
+  public int clusterInstance(Instance instance) throws Exception {
+    int idx = -1;
+    double dis = bound;
+    for (int i = 0; i < centroids.size(); i++) {
+      double d = calcDistance(centroids.get(i), instance);
+      if (d < dis) {
+        idx = i;
+        dis = d;
+      }
+    }
+
+    return idx;
+  }
+
   @Override
   public int numberOfClusters() throws Exception {
     return n_cluster;

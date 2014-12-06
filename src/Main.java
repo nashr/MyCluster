@@ -1,3 +1,4 @@
+import weka.clusterers.ClusterEvaluation;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
@@ -29,6 +30,12 @@ public class Main {
     long begin = System.currentTimeMillis();
     PC.buildClusterer(data);
     long end = System.currentTimeMillis();
+
+    ClusterEvaluation eval = new ClusterEvaluation();
+    eval.setClusterer(PC);
+    eval.evaluateClusterer(data);
+
+    System.out.println(eval.clusterResultsToString());
 
     System.out.println("Classifier built in " + (end - begin) + " milliseconds.");
   }
